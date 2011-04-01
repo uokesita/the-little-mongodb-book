@@ -1,14 +1,14 @@
-## About ##
-The Little MongoDB Book is a free book introducing MongoDB.
+## Acerca ##
+El pequeño libro MongoDB es un libro gratuito introductorio a MongoDB.
 
-The book was written shortly after the creation of the [MongoDB interactive tutorial](http://mongly.com). As such, the two can be seen as complementary.
+El libro fue creado poco después de la creación del [tutorial interactivo de MongoDB](http://mongly.com). De esta forma los dos pueden ser vistos como complementos.
 
-The book was written by [Karl Seguin](http://openmymind.net), with [Perry Neal](http://twitter.com/perryneal)'s assistance.
+El libro fue escrito por [Karl Seguin](http://openmymind.net), con la asistencia de [Perry Neal](http://twitter.com/perryneal).
 
-## License ##
-The book is freely distributed under the  [Attribution-NonCommercial 3.0 Unported license](<http://creativecommons.org/licenses/by-nc/3.0/legalcode>).
+## Licencia ##
+El libro es distribuido gratuitamente bajo la licencia [Reconocimiento-NoComercial 3.0 Unported (CC BY-NC 3.0)](<http://creativecommons.org/licenses/by-nc/3.0/deed.es_ES>).
 
-## Formats ##
-The book is written in [markdown](http://daringfireball.net/projects/markdown/) and converted to PDF using [PanDoc](http://johnmacfarlane.net/pandoc/). A few LaTex specific commands have been placed in the markdown file to help with pdf-generation (namely for the title page and to create page breaks between chapters).
+## Formatos ##
+El libro esta escrito en [markdown](http://daringfireball.net/projects/markdown/) y convertido a PDF usando [PanDoc](http://johnmacfarlane.net/pandoc/). Algunos comandos específicos de LaTex fueron usados en el archivo markdown para ayudar a la generación del pdf (para la pagina pequeña y los saltos de pagina entre capítulos).
 
-The LaTex template makes use of [Lena Herrmann's JavaScript highlighter](http://lenaherrmann.net/2010/05/20/javascript-syntax-highlighting-in-the-latex-listings-package).
+Las plantillas LaTex usan el [Resaltado javscript de Lena Herrmann](http://lenaherrmann.net/2010/05/20/javascript-syntax-highlighting-in-the-latex-listings-package).
