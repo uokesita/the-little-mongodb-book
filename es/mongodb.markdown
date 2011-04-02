@@ -179,76 +179,77 @@ We haven't looked at the `update` command yet, or some of the fancier things we 
 
 \clearpage
 
-## Chapter 2 - Updating ##
-In chapter 1 we introduced three of the four CRUD (create, read, update and delete) operations. This chapter is dedicated to the one we skipped over: `update`. `Update` has a few surprising behaviors, which is why we dedicate a chapter to it.
+## Capitulo 2 - Updating ##
+En el capitulo 1 nos introducimos en tres de las cuatro operaciones del CRUD (create, read, update y delete). Este capitulo esta dedicado al que saltamos `update`. `Update` tiene algunos comportamientos soprendentes, por lo que dedicaremos un capitulo a la misma.
 
 ### Update: Replace Versus $set ###
-In its simplest form, `update` takes 2 arguments: the selector (where) to use and what field to update with. If Roooooodles had gained a bit of weight, we could execute:
+En su forma mas simple, `update` tiene 2 argumentos: el selector (where) a usar y el campo a actualizar. Si Roooooodles a ganado un poco de peso, podriamos ejecutar:
 
 	db.unicorns.update({name: 'Roooooodles'}, {weight: 590})
 
-(if you've played with your `unicorns` collection and it doesn't have the original data anymore, go ahead and `remove` all documents and re-insert from the code in chapter 1.)
+(Si has jugado con tu coleccion `unicorns` y ya no tienes los datos originales, sigue adelante y `remove` todos los documentos y vuelve a insertar el codigo en el capitulo 1.)
 
-If this was real code, you'd probably update your records by `_id`, but since I don't know what `_id` MongoDB generated for you, we'll stick to `names`.  Now, if we look at the updated record:
+Si esto fuera codigo verdadero, probablemente habria que actualizar sus registros por `_id`, pero como yo no se que `_id` genero MongoDB para usted, me quedo con `names`. Ahora bien, si nos fijamos en el registro actualizado:
 
 	db.unicorns.find({name: 'Roooooodles'})
 
-You should discover `updates` first surprise. No document is found because the second parameter we supply is used to **replace** the original. In other words, the `update` found a document by `name` and replaced the entire document with the new document (the 2nd parameter). This is different than how SQL's `update` command works. In some situations, this is ideal and can be leveraged for some truly dynamic updates. However, when all you want to do is change the value of one, or a few fields, you are best to use MongoDB's `$set` modifier:
+Descubriras la primera sorpresa de `update`, No se encuentran documentos porque el segundo parametro suministrado es utilizado para **remplazar** el original. En otras palabras, el `update` encontro un documento por `name` y remplazo el documento completo con un nuevo documento (el segundo parametro). Esto es diferente a como trabaja el comando `update` en SQL. En algunas situaciones, esto es ideal y se puede aprovechar para algunas actualizaciones realmente dinamicas. Sin embargo, cuando todo lo que quiero es modificar uno o algunos de los campos, es mejor usar el modificador `$set` de MongoDB:
 
 	db.unicorns.update({weight: 590}, {$set: {name: 'Roooooodles', dob: new Date(1979, 7, 18, 18, 44), loves: ['apple'], gender: 'm', vampires: 99}})
 
-This'll reset the lost fields. It won't overwrite the new `weight` since we didn't specify it. Now if we execute:
+Esto va a restablecer los campos perdidos. No se sobreescribe el nuevo `weight` ya que no lo especifique. Ahora si ejecutamos:
 
 	db.unicorns.find({name: 'Roooooodles'})
 
-We get the expected result. Therefore, the correct way to have updated the weight in the first place is:
+Obtenemos el resultado esperado. Por lo tanto, la forma correcta de haber actualizado el `weight` en el primer lugar es:
 
 	db.unicorns.update({name: 'Roooooodles'}, {$set: {weight: 590}})
 
-### Update Modifiers ###
-In addition to `$set`, we can leverage other modifiers to do some nifty things. All of these update modifiers work on fields - so your entire document won't be wiped out. For example, the `$inc` modifier is used to increment a field by a certain positive or negative amount. For example, if Pilot was incorrectly awarded a couple vampire kills, we could correct the mistake by executing:
+### Modificadores de Update ###
+Adicionalmente a `$set`, podemos aprovechar otros modificadores para hacer algunas cosas ingeniosas. Todos estos modificadores de Update trabajan en los campos - entonces el documento completo no sera remplazado o borrado. Por ejemplo, el modificador `$inc` es usado para incrementar un campo en cierto monto positivo o negativo. Por ejemplo, si a un Pilot se le adjudico incorrectamente la muerte de un par de vampires, se podria corregir el error ejecutando:
 
 	db.unicorns.update({name: 'Pilot'}, {$inc: {vampires: -2}})
 
-If Aurora suddenly developed a sweet tooth, we could add a value to her `loves` field via the `$push` modifier:
+Si Aurora depronto desarrolla un gusto por el dulce podemos agregarlo a su campo `loves` con el modificador `$push`:
 
 	db.unicorns.update({name: 'Aurora'}, {$push: {loves: 'sugar'}})
 
-The [Updating](http://www.mongodb.org/display/DOCS/Updating) section of the MongoDB website has more information on the other available update modifiers.
+La seccion de [Updating](http://www.mongodb.org/display/DOCS/Updating) del sitio web  de MongoDB tiene más información sobre los modificadores de actualización disponibles.
 
 ### Upserts ###
-One of `updates` more pleasant surprises is that it fully supports `upserts`. An `upsert` updates the document if found or inserts it if not. Upserts are handy to have in certain situations and, when you run into one, you'll know it. To enable upserting we set a third parameter to `true`.
+Una de las sorpresas mas agradables de los `updates` es que es completamente compatible con `upserts`. Un `upsert` actualiza el documento si lo encuentra o lo inserta sino lo encuentra. Upserts son utiles de tener en determinadas situaciones, cuando lo ejecutes, lo sabras. Para habilitar upserting fijamos un tercer parametro a `true`.
 
-A mundane example is a hit counter for a website. If we wanted to keep an aggregate count in real time, we'd have to see if the record already existed for the page, and based on that decide to run an update or insert. With the third parameter omitted (or set to false), executing the following won't do anything:
+Un ejemplo mundano es un contador de visitas de un sitio web. Si queremos mantener un recuento total en tiempo real, tendríamos que ver si el registro ya existía para la página, y basado en eso decidiremos si correr un update o un insert. Con el tercer parametro omitido (o establecido en false), ejecutando lo siguiente no hara nada:
 
 	db.hits.update({page: 'unicorns'}, {$inc: {hits: 1}});
 	db.hits.find();
 
-However, if we enable upserts, the results are quite different:
+Sin embargo, si nos permiten upserts, los resultados son muy diferentes:
 
 	db.hits.update({page: 'unicorns'}, {$inc: {hits: 1}}, true);
 	db.hits.find();
 
-Since no documents exists with a field `page` equal to `unicorns`, a new document is inserted. If we execute it a second time,the existing document is updated and `hits` is incremented to 2.
+Dado que no existen documentos con un campo `page` igual `unicorns`, se inserta un nuevo documento. Si se ejecuta una segunda vez, el documento existente se actualiza y `hits` se incrementa a 2.
 
 	db.hits.update({page: 'unicorns'}, {$inc: {hits: 1}}, true);
 	db.hits.find();
 
-### Multiple Updates ###
-The final surprise `update` has to offer is that, by default, it'll update a single document. So far, for the examples we've looked at, this might seem logical. However, if you executed something like:
+### Multiples Updates ###
+La ultima sorpresa que `update` tiene para ofrecer es que, por defecto, se va a actualizar un unico documento. Hasta el momento, por los ejemplos que hemos visto,  esto puede parecer lógico. Sin embargo, si se ejecuta algo como:
 
 	db.unicorns.update({}, {$set: {vaccinated: true }});
 	db.unicorns.find({vaccinated: true});
 
-You'd likely expect to find all of your precious unicorns to be vaccinated. To get the behavior you desire, a fourth parameter must be set to true:
- 
+Probablemente esperas encontrar todos tus preciosos `unicorns` a ser `vaccinated`. Para poder obtener eso, es necesario asignar un cuarto parametro a `true`:
+
 	db.unicorns.update({}, {$set: {vaccinated: true }}, false, true);
 	db.unicorns.find({vaccinated: true});
 
-### In This Chapter ###
-This chapter concluded our introduction to the basic CRUD operations available against a collection. We looked at `update` in detail and observed three interesting behaviors. First, unlike an SQL update, MongoDB's `update` replaces the actual document. Because of this the `$set` modifier is quite useful. Secondly, `update` supports an intuitive `upsert` which is particularly useful when paired with the `$inc` modifier. Finally, by default, `update` only updates the first found document.
+### En Este Capitulo ###
 
-Do remember that we are looking at MongoDB from the point of view of its shell. The driver and library you use could alter these default behaviors or expose a different API. For example, the Ruby driver merges the last two parameters into a single hash: `{:upsert => false, :multi => false}`.
+Este capítulo concluye nuestra introducción a la base de operaciones CRUD disponible para una colección. Vimos `update` en detalle y observaron tres comportamientos interesantes. En primer lugar, a diferencia de un `update` de SQL, el `unicorns` de MongoDB reemplaza el documento actual. Debido a esto el modificador `$ set` es bastante útil. En segundo lugar, `update` admite un instuitivo soporte para `upsert` que es particularmente útil cuando se combina con el modificador `$ inc`. Finalmente, por defecto, `update` solo actualiza el primer documento encontrado. 
+
+Recuerde que estamos viendo MongoDB desde el punto de vista de su shell. El driver y la libreria que utilices puede modificar estos comportamientos predeterminados o exponer una API diferente. Por ejemplo, el driver de Ruby combina los dos últimos parámetros en un hash único: `{:upsert => false, :multi => false}`.
 
 \clearpage
 
