@@ -254,47 +254,47 @@ Recuerda que estamos viendo MongoDB desde el punto de vista de su terminal. El d
 
 \clearpage
 
-## Chapter 3 - Mastering Find ##
-Chapter 1 provided a superficial look at the `find` command. There's more to `find` than understanding `selectors` though. We already mentioned that the result from `find` is a `cursor`. We'll now look at exactly what this means in more detail.
+## Capitulo 3 - Find ##
+El capitulo 1 pudimos ver superficialmente el comando `find`. Hay mucho mas de `find` que entender los `selectores`. Ya mencionamos que el resultado del comando `find` es un `cursor`. Ahora veremos exactamente que significa esto en detalle.
 
-### Field Selection ###
-Before we jump into `cursors`, you should know that `find` takes a second optional parameter. This parameter is the list of fields we want to retrieve. For example, we can get all of the unicorns names by executing:
+### Selección de Campos ###
+Antes de que saltemos a los `cursors`, debes saber que `find` toma un segundo parámetro opcional. Este parámetro es la lista de los campos que quieres obtener. Por ejemplo, podemos obtener todos los nombres de unicorns ejecutando:
 
 	db.unicorns.find(null, {name: 1});
 
-By default, the `_id` field is always returned. We can explicitly exclude it by specifying `{name:1, _id: 0}`.
+Por defecto, el campo `_id` siempre es retornado. Podemos excluirlo explicitamente especificando `{name:1, _id: 0}`.
 
-Aside from the `_id` field, you cannot mix and match inclusion and exclusion. If you think about it, that actually makes sense. You either want to select or exclude one or more fields explicitly.
+A parte del campo `_id`, no puedes mezclar inclusión y exclusión de campos. Si piensas sobre eso, tiene sentido. Tu deseas seleccionar o excluir uno o más campos explícitamente.
 
-### Ordering ###
-A few times now I've mentioned that `find` returns a cursor whose execution is delayed until needed. However, what you've no doubt observed from the shell is that `find` executes immediately. This is a behavior of the shell only. We can observe the true behavior of `cursors` by looking at one of the methods we can chain to `find`. The first that we'll look at is `sort`. `sort` works a lot like the field selection from the previous section. We specify the fields we want to sort on, using 1 for ascending and -1 for descending. For example:
+### Ordenamiento ###
+He mencionado anteriormente que `find` retorna un cursor cuya ejecución es retardada hasta que se necesite. Sin embargo, lo que has observado sin duda desde la terminal es que `find` se ejecuta inmediatamente. Este es un comportamiento solo de la terminal. Podemos observar el verdadero comportamiento de los `cursors` viendo uno de los métodos que podemos unir a `find`. El primero que veremos es `sort` (ordenar). `sort` se comporta como la selección de campo de la sección anterior. Nosotros especificamos los campos por los cuales queremos ordenar, usando 1 para ascendente y -1 para descendente. Por ejemplo:
 
-	//heaviest unicorns first
+	//los unicorns mas pesados primero
 	db.unicorns.find().sort({weight: -1})
 	
-	//by vampire name then vampire kills:
+	//por nombre y luego por el numero de vampiros matados
 	db.unicorns.find().sort({name: 1, vampires: -1})
 
-Like with a relational database, MongoDB can use an index for sorting. We'll look at indexes in more detail later on. However, you should know that MongoDB limits the size of your sort without an index. That is, if you try to sort a large result set which can't use an index, you'll get an error. Some people see this as a limitation. In truth, I wish more databases had the capability to refuse to run unoptimized queries. (I won't turn every MongoDB drawback into a positive, but I've seen enough poorly optimized databases that I sincerely wish they had a strict-mode.)
+Como en una base de datos relacional, MongoDB puede usar un indice para ordenar. Veremos los indices en detalle mas adelante. Sin embargo, debes saber que MongoDB limita el tamaño de tu ordenamiento sin un indice. Esto es, si intentas ordenar un resultset grande que no puede usar un indice, tendrás un error. Algunas personas ven esto como una limitante. Realmente, desearía que mas bases de datos tuvieran la capacidad de negar queries no optimizadas (No voy a convertir cada inconveniente MongoDB en algo positivo, pero he visto bases de datos tan mal optimizadas que deseo sinceramente que había un modo-estricto.)
 
-### Paging ###
-Paging results can be accomplished via the `limit` and `skip` cursor methods. To get the second and third heaviest unicorn, we could do:
+### Paginacion ###
+Paginar los resultados puede ser logrado a través de los métodos de cursores `limit` y `skip`. Para obtener el segundo y tercer unicorn mas pesados, podemos hacer:
 
 	db.unicorns.find().sort({weight: -1}).limit(2).skip(1)
 
-Using `limit` in conjunction with `sort`, is a good way to avoid running into problems when sorting on non-indexed fields.
+Usando `limit` en conjunto con `sort`, es una buena forma de evitar encontrarnos con problemas cuando hacemos ordenamiento en campo sin indice.
 
-### Count ###
-The shell makes it possible to execute a `count` directly on a collection, such as:
+### Cuentas ###
+La terminal de Mongo hace posible ejecutar `count` directamente en una colección, así:
 
 	db.unicorns.count({vampires: {$gt: 50}})
 
-In reality, `count` is actually a `cursor` method, the shell simply provides a shortcut. Drivers which don't provide such a shortcut need to be executed like this (which will also work in the shell):
+En realidad, `count` es un metodo `cursor`, la terminal solo provee un atajo. Los drivers que no proveen ese atajo necesitan ser ejecutado así (que también funcionara en la terminal):
 
 	db.unicorns.find({vampires: {$gt: 50}}).count()
 
-### In This Chapter ###
-Using `find` and `cursors` is a straightforward proposition. There are a few additional commands that we'll either cover in later chapters or which only serve edge cases, but, by now, you should be getting pretty comfortable working in the mongo shell and understanding the fundamentals of MongoDB.
+### En este capitulo ###
+El uso de `find` y `cursors` es algo sencillo. Hay algunos comandos adicionales que cubriremos en capítulos siguientes los cuales serán casos extremos, pero hasta ahora, debes estar cómodo trabajando con la terminal mongo y entendiendo los fundamentos de MongoDB.
 
 \clearpage
 
