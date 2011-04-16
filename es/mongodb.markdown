@@ -435,19 +435,21 @@ El mensaje de este capítulo es que MongoDB, en la mayoría de los casos, puede 
 
 \clearpage
 
-## Chapter 6 - MapReduce ##
-MapReduce is an approach to data processing which has two significant benefits over more traditional solutions. The first, and main, reason it was development is performance. In theory, MapReduce can be parallelized, allowing very large sets of data to be processed across many cores/CPUs/machines. As we just mentioned, this isn't something MongoDB is currently able to take advantage of. The second benefit of MapReduce is that you get to write real code to do your processing. Compared to what you'd be able to do with SQL, MapReduce code is infinitely richer and lets you push the envelope further before you need to use a more specialized solution.
+## Capitulo 6 - MapReduce ##
 
-MapReduce is a pattern that has grown in popularity, and you can make use of it almost anywhere; C#, Ruby, Java, Python and so on all have implementations. I want to warn you that at first this'll seem very different and complicated. Don't get frustrated, take your time and play with it yourself. This is worth understanding whether you are using MongoDB or not.
+MapReduce es un enfoque al procesamiento de data que tiene dos grandes beneficios sobre los modelos tradicionales. La primera y principal razon es que fue desarrollado enfocado en el rendimiento. En teoria MapReduce puede ser correr en paralelo permitiendonos asi procesar largos conjuntos de data utilizando muchos procesadores o maquinas. Como ya mencionamos esto no es algo que MongoDB puede hacer actualmente. El segundo beneficio de MapReduce es que uno escribe codigo para procesar la informacion. Comparado con lo que se hiciera en SQL, MapReduce es mucho mas rico y te deja aprovechar las ventajas del lenguaje de programacion que estes usando. 
 
-### A Mix of Theory and Practice ###
-MapReduce is a two-step process. First you map and then you reduce. The mapping step transforms the inputted documents and emits a key=>value pair (the key and/or value can be complex). The reduce gets a key and the array of values emitted for that key and produces the final result. We'll look at each step, and the output of each step.
+MapReduce es un patron que ha credido en popularidad y que puedes usar en casi todos los lenguajes como: C#, Ruby, Java, Phyton, etc. Quiero advertirle que esto sonara muy complicado y diferente la primera vez que lo usa pero no se preocupe. Toma tu tiempo y juega con MapReduce. Vale la pena aprenderlo asi estes usando MongoDB o no. 
 
-The example that we'll be using is to generate a report of the number of hits, per day, we get on a resource (say a webpage). This is the *hello world* of MapReduce. For our purposes, we'll rely on a `hits` collection with two fields: `resource` and `date`. Our desired output is a breakdown by `resource`, `year`, `month`, `day` and `count`. 
+### Mezclando un poco de Teoria y Practica ###
 
-Given the following data in `hits`:
+MapReduce se devide en dos pasos. El primero lo llamamos "MAP" o Mapa en español y el segundo "Reduce" o reducir en español. El proceso de crear un mapa transforma los documentos que le enviamos y emite una clave un un valor o (key => value pair). El paso de reducer toma las claves y el arreglo de valores emitidos para esas claves y produce el resultado final. Expliquemos un poco mas:
 
-	resource     date
+El ejemplo que usaremos sera generar un reporte del numero de hits por dia que tenemos en una pagina. Esto es el "Hola Mundo" del MapReduce. Para esto vamos a usar una coleccion de 'hits' con dos campos: recursos y fecha. El resultado que esperando este dividido por 'recurso', 'año', 'mes', 'dia', 'veces'
+
+Supongamos que tenemos la siguiente informacion: 
+
+	recurso      fecha
 	index        Jan 20 2010 4:30
 	index        Jan 20 2010 5:30
 	about        Jan 20 2010 6:00
@@ -459,20 +461,20 @@ Given the following data in `hits`:
 	index        Jan 21 2010 9:30
 	index        Jan 22 2010 5:00
 
-We'd expect the following output:
+Esperariamos el siguiente resultado:
 
-	resource  year   month   day   count
+	recurso   año   mes      dia   veces
 	index     2010   1       20    3
 	about     2010   1       20    1
 	about     2010   1       21    3
 	index     2010   1       21    2
 	index     2010   1       22    1
 
-(The nice thing about this type of approach to analytics is that by storing the output, reports are fast to generate and data growth is controlled (per resource that we track, we'll add at most 1 document per day.)
+(Lo bueno acerca este tipo de enfoque es que al ordenar el resultado, los reportes son rapidos de generar y el crecimiento de la informacion esta controlado ya que solo usamos un documento de mongo por cada recurso que queramos rastrear)
 
-For the time being, focus on understanding the concept. At the end of this chapter, sample data and code will be given for you to try on your own.
+Por ahora solo enfoquemosno en entender los conceptos. Al final de este capitulo te propocionaremos toda la data que usamos u el codigo para que tu jueges por ti mismo. 
 
-The first thing to do is look at the map function. The goal of map is to make it emit a value which can be reduced. It's possible for map to emit 0 or more times. In our case, it'll always emit once (which is common). Imagine map as looping through each document in hits. For each document we want to emit a key with resource, year, month and day, and a simple value of 1:
+Lo primero que haremos es ver la funciona 'Map' o Mapa. El objetivo de esta funcion es que retorne un valor que pueda ser reducido. Es posible que emita 0 o mas veces. En nuestro caso, siempre emitira una sola vez (muy comun). Imaginate que Map es un bucle a travez de todos los hits. Por cada documento queremos generar una clave con un recurso, año, mes, dia y valor. 
 
 	function() {
 		var key = {
@@ -484,7 +486,7 @@ The first thing to do is look at the map function. The goal of map is to make it
 		emit(key, {count: 1}); 
 	}
 
-`this` refers to the current document being inspected. Hopefully what'll help make this clear for you is to see what the output of the mapping step is. Using our above data, the complete output would be:
+`this` se refiere al documento que estamos procesando actualmente. Vamos a ver el resultado de esta funcion para entender un poco mas esto. Estamos usando la informacion que tenemos dos parrafos mas arriba. El resultado de la funcion Map seria: 
 
 	{resource: 'index', year: 2010, month: 0, day: 20} => [{count: 1}, {count: 1}, {count:1}]
 	{resource: 'about', year: 2010, month: 0, day: 20} => [{count: 1}]
@@ -492,9 +494,10 @@ The first thing to do is look at the map function. The goal of map is to make it
 	{resource: 'index', year: 2010, month: 0, day: 21} => [{count: 1}, {count: 1}]
 	{resource: 'index', year: 2010, month: 0, day: 22} => [{count: 1}]
 
-Understanding this intermediary step is the key to understanding MapReduce. The values from emit are grouped together, as arrays, by key. .NET and Java developers can think of it as being of type `IDictionary<object, IList<object>>` (.NET) or `HashMap<Object, ArrayList>` (Java).
+El entendimineto de este paso intermediario es esencial para el entendimiento de MapReduce. Los valores que emite estan agrupados como arreglos por clave. Los desarrolladores de .NET y Java pueden pensar de esto como un: `IDictionary<object, IList<object>>` (.NET) or `HashMap<Object, ArrayList>` (Java).
 
-Let's change our map function in some contrived way:
+
+Cambiemos la funcion de MAP un poco mas:
 
 	function() {
 		var key = {resource: this.resource, year: this.date.getFullYear(), month: this.date.getMonth(), day: this.date.getDate()};
@@ -505,13 +508,13 @@ Let's change our map function in some contrived way:
 		}
 	}
 
-The first intermediary output would change to:
+El primero resultado cambiaria a:
 
 	{resource: 'index', year: 2010, month: 0, day: 20} => [{count: 5}, {count: 1}, {count:1}]
 
-Notice how each emit generates a new value which is grouped by our key.
+Observa como cada `emit` genera un nuevo valor agrupado por nueva clave. 
 
-The reduce function takes each of these intermediary results and outputs a final result. Here's what ours looks like:
+La funcion reduce o Reducir en español toma cada uno de estos valores intermedios y emite un resultado final. Nuestra funcion para reducir es:
 
 	function(key, values) {
 		var sum = 0;
@@ -521,7 +524,7 @@ The reduce function takes each of these intermediary results and outputs a final
 		return {count: sum};
 	};
 
-Which would output:
+El resultado de esta es:
 
 	{resource: 'index', year: 2010, month: 0, day: 20} => {count: 3}
 	{resource: 'about', year: 2010, month: 0, day: 20} => {count: 1}
@@ -529,27 +532,27 @@ Which would output:
 	{resource: 'index', year: 2010, month: 0, day: 21} => {count: 2}
 	{resource: 'index', year: 2010, month: 0, day: 22} => {count: 1}
 
-Technically, the output in MongoDB is:
+Tecnicamente el resultado en MongoDB es:
 
 	_id: {resource: 'home', year: 2010, month: 0, day: 20}, value: {count: 3}
 
-Hopefully you've noticed that this is the final result we were after.
+Como puedes notar este es el resultado que esperabamos. 
 
-If you've really been paying attention, you might be asking yourself *why didn't we simply use `sum = values.length`?* This would seem like an efficient approach when you are essentially summing an array of 1s. The fact is that reduce isn't always called with a full and perfect set of intermediate data. For example, instead of being called with:
+Si has estado prestando atencion te preguntaras: *¿Por que no simplemente usamos `sum = values.lenght`?* Esto parece un enfoque eficiente cuando estas sumando arreglos de 1. La verdad es que en pocas ocaciones llamamos a la funcion Reduce con un set perfecto. Por ejemplo en vez de ser llamado con: 
 
 	{resource: 'home', year: 2010, month: 0, day: 20} => [{count: 1}, {count: 1}, {count:1}]
 
-Reduce could be called with:
+Reduce puede ser llamado con:
 
 	{resource: 'home', year: 2010, month: 0, day: 20} => [{count: 1}, {count: 1}]
 	{resource: 'home', year: 2010, month: 0, day: 20} => [{count: 2}, {count: 1}]
 
-The final output is the same (3), the path taken is simply different. As such, reduce must always be idempotent. That is, calling reduce multiple times should generate the same result as calling it once. 
+Al resultado final es el mismo (3) pero el camino tomado para llegar a el es diferente. Por lo tanto la funcion reduce siempre debe ser indempotente. Esto es que la funcion deberia dar el mismo resultado asi se llame una sola vez o varias veces. 
 
-We aren't going to cover it here but it's common to chain reduce methods when performing more complex analysis. 
+Es muy comun que encadenemos varias funciones Reduce cuando hacemos analisys complejos. 
 
-### Pure Practical ###
-With MongoDB we use the `mapReduce` command on a collection. `mapReduce` takes a map function, a reduce function and an output directive. In our shell we can create and pass a JavaScript function. From most libraries you supply a string of your functions (which is a bit ugly). First though, let's create our simple data set:
+### Pura Practica ###
+Con MongoDB usamos el comando `mapReduce` en una coleccion. `mapReduce` toma una funcion para realizar el mapeo, una funciona para realizar la reduccion y una directiva para el resultado. En nuestro terminal podemos pasarle una funcion de Javascript. En muchas librerias le daremos un `string` con nuestras funciones. Primero vamos a crear nuestro set de data para analizar:
 
 	db.hits.insert({resource: 'index', date: new Date(2010, 0, 20, 4, 30)});
 	db.hits.insert({resource: 'index', date: new Date(2010, 0, 20, 5, 30)});
@@ -562,7 +565,7 @@ With MongoDB we use the `mapReduce` command on a collection. `mapReduce` takes a
 	db.hits.insert({resource: 'index', date: new Date(2010, 0, 21, 9, 30)});
 	db.hits.insert({resource: 'index', date: new Date(2010, 0, 22, 5, 0)});
 
-Now we can create our map and reduce functions (the MongoDB shell accepts multi-line statements, you'll see *...* after hitting enter to indicate more text is expected):
+Ahora podemos crear nuestras funciones Map y Reduce. El terminal de MongoDB acepta comandos multi linea y veras *..* despues de cotar enter para indicar que esperamos mas texto. 
 
 	var map = function() {
 		var key = {resource: this.resource, year: this.date.getFullYear(), month: this.date.getMonth(), day: this.date.getDate()};
@@ -577,21 +580,24 @@ Now we can create our map and reduce functions (the MongoDB shell accepts multi-
 		return {count: sum};
 	};
 
-Which we can use the `mapReduce` command against our `hits` collection by doing:
+Ahora podemos usar el comando `mapReduce` sobre la coleccion de `hits`:
 
 	db.hits.mapReduce(map, reduce, {out: {inline:1}})
 
-If you run the above, you should see the desired output. Setting `out` to `inline` means that the output from `mapReduce` is immediately streamed back to us. This is currently limited for results that are 16 megabytes or less. We could instead specify `{out: 'hit_stats'}` and have the results stored in the `hit_stats` collections:
+Corriendo este comando podremos ver el resultado deseado. Cambiando `out` a `inline` significa que el resultado de `mapReduce` es inmediatamente transmitido a nosotros. Esto esta actualmente limitado a resultados que son menores de 16 megabytes. Pudieramos especificar `{out: 'hit_stats'}` y tener el resultado guargado en la coleccion `hit_stats`
 
 	db.hits.mapReduce(map, reduce, {out: 'hit_stats'});
 	db.hit_stats.find();
 
-When you do this, any existing data in `hit_stats` is lost. If we did `{out: {merge: 'hit_stats'}}` existing keys would be replaced with the new values and new keys would be inserted as new documents. Finally, we can `out` using a `reduce` function to handle more advanced cases (such an doing an upsert). 
+Cuando realizamos esta accion perdemos toda la informacion elmacenada en `hit_stats`. Si hicieramos `{out: {merge: 'hi_stats'}}` las claves existentes seran remplazadas cuando los nuevos valores y los nuevas llaves sera ensertadas como documentos. Finalmente podemos `out` usando una funcion `reduce` para manerar casos mas avanzados. 
 
-The third parameter takes additional options, for example we could filter, sort and limit the documents that we want analyzed. We can also supply a `finalize` method to be applied to the results after the `reduce` step.
+El tercer parametro toma algunas opciones adicionales. Pudieramos filtrar, ordenar y limitar los documentos que queremos analizar. Tambien podemos especificar una funcion `finalize` que sera ejecutada contra el resultado despues de la funcion `reduce`
 
-### In This Chapter ###
-This is the first chapter where we covered something truly different. If it made you uncomfortable, remember that you can always use MongoDB's other [aggregation capabilities](http://www.mongodb.org/display/DOCS/Aggregation) for simpler scenarios. Ultimately though, MapReduce is one of MongoDB's most compelling features. The key to really understanding how to write your map and reduce functions is to visualize and understand the way your intermediary data will look coming out of `map` and heading into `reduce`.
+
+### En Este Capitulo ###
+
+Este es el primer capitulo donde cubrimos algo diferente. Si te hizo sentir incomodo, recuerda que siempre puedes usar otras funciones de MongoDB como la agregacion(http://www.mongodb.org/display/DOCS/Aggregation) para escenarios mas sencillos. Al final ten en cuanta que MapReduce es una de las mejores funcionalidades de MongoDB. La clave para entender como escribir las funciones de Map y Reduce es visualizar y entender la manera como la data intermedia luciera saliendo del `map` y entrando al `reduce`
+
 
 \clearpage
 
