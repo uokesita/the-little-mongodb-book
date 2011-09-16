@@ -298,38 +298,37 @@ El uso de `find` y `cursors` es algo sencillo. Hay algunos comandos adicionales 
 
 \clearpage
 
-## Chapter 4 - Data Modeling ##
-Let's shift gears and have a more abstract conversation about MongoDB. Explaining a few new terms and some new syntax is a trivial task. Having a conversation about modeling with a new paradigm isn't as easy. The truth is that most of us are still finding out what works and what doesn't when it comes to modeling with these new technologies. It's a conversation we can start having, but ultimately you'll have to practice and learn on real code.
+## Capitulo 4 - Modelado de datos ##
+Vamos a cambiar maquinas y tener una conversacion mas abstracta de MongoDB. Explicar nuevos terminos y nueva sintaxis es una tarea facil. Tener una conversacion sobre modelado con un nuevo paradigma no lo es. La verdad es que la mayoria de nosotros aun estamos encontrando lo que funciona y lo que no con respecto al modelado con estas nuevas tecnologias. Es una conversacion que podemos comenzar a tener, pero al final tendras que practicar y aprender con codigo real.
 
-Compared to most NoSQL solutions, document-oriented databases are probably the least different, compared to relational databases, when it comes to modeling. The differences which exist are subtle but that doesn't mean they aren't important. 
+Comparado a la mayoria de soluciones NoSQL, las bases de dato orientadas a objetos son probablemente las menos diferentes, comparadas a las bases de datos relacionales, cuando se trata de modelado. Las diferencias que existen son sutiles pero no quiere decir que no sean importantes.
 
 ### No Joins ###
-The first and most fundamental difference that you'll need to get comfortable with is MongoDB's lack of joins. I don't know the specific reason why some type of join syntax isn't supported in MongoDB, but I do know that joins are generally seen as non-scalable. That is, once you start to horizontally split your data, you end up performing your joins on the client (the application server) anyways. Regardless of the reasons, the fact remains that data *is* relational, and MongoDB doesn't support joins.
+La primera diferencia y la mas fundamental con la que tendras que acostumbrarte es la falta de joins en MongoDB. No se la razon especifica por la que algunos tipod de joins no estan soportados en MongoDB, pero si se, que los joins son vistos generalemte como no escalables. Esto es, una vez que empiezas a separar tu datos horizontalmente, terminas usando joins en el lado del cliente (la aplicacion en enl servidor). Cuales quiera sean las razones, el hecho es que los datos *son* relacionales, y MongoDB no soporta joins.
 
-Without knowing anything else, to live in a join-less world, we have to do joins ourselves within our application's code. Essentially we need to issue a second query to `find` the relevant data. Setting our data up isn't any different than declaring a foreign key in a relational database. Let's give a little less focus to our beautiful `unicorns` and a bit more time to our `employees`. The first thing we'll do is create an employee (I'm providing an explicit `_id` so that we can build coherent examples)
+Sin saber mas nada, para vivir en un mundo sin joins, debemos hacer joins nosotros mismo en nuestro codigo de aplicacion. Esencialmente debemos hacer un query para encontrar los datos relevantes. Configurar nuestros datos no es nada diferente a declarar una clave foranea en una base de datos relacional. Vamos a qitarle el foco a nuestros `unicorns` y usaremos nuestros `employees` (empleados). Lo primero que haremos es crear nuestro empleados (Le proveo un `_id` explicito para tener ejemplos coherentes).
 
 	db.employees.insert({_id: ObjectId("4d85c7039ab0fd70a117d730"), name: 'Leto'})
 
-Now let's add a couple employees and set their manager as `Leto`:
+Ahora agregaremos algunos empleados, y colocamos como su manager a `Leto`:
 
 	db.employees.insert({_id: ObjectId("4d85c7039ab0fd70a117d731"), name: 'Duncan', manager: ObjectId("4d85c7039ab0fd70a117d730")});
 	db.employees.insert({_id: ObjectId("4d85c7039ab0fd70a117d732"), name: 'Moneo', manager: ObjectId("4d85c7039ab0fd70a117d730")});
 
+(Vale la pena recalcar que el `_id` puede ser cualquier valor unico. Como casi siempre usaras `ObjectId` en la vida real, lo usaremos tambien)
 
-(It's worth repeating that the `_id` can be any any unique value. Since you'd likely use an `ObjectId` in real life, we'll use them here as well.)
-
-Of course, to find all of Leto's employees, one simply executes:
+Por supuesto, para encontrar todos los empleados de Leto, simplemente ejecutas:
 
 	db.employees.find({manager: ObjectId("4d85c7039ab0fd70a117d730")})
 
-There's nothing magical here. In the worst cases, most of the time, the lack of join will merely require an extra query (likely indexed).
+No hay nada magico en esto. En el peor escenario, la mayoría del tiempo, la falta de joins solo requerira de un query extra (casi siempre indexado)
 
-#### Arrays and Embedded Documents ####
-Just because MongoDB doesn't have joins doesn't mean it doesn't have a few tricks up its sleeve. Remember when we quickly saw that MongoDB supports arrays as first class objects of a document? It turns out that this is incredibly handy when dealing with many-to-one or many-to-many relationships. As a simple example, if an employee could have two managers, we could simply store these in an array:
+#### Arreglos y Documentos Embebidos ####
+Solo porque MongoDB no tenga joins no quiere decir que no tenga algunos trucos bajo su manga. Recuerdas cuando vimos que MongoDB soporta arreglos como objetos primarios de un documento? Resulta que esto es increiblemente bueno cuando lidiamos con relaciones muchos-a-uno o muchos-a-muchos. Como un ejemplo simple, si un empleado puede tener dos managers, podemos almacenarlos en un arreglo:
 
 	db.employees.insert({_id: ObjectId("4d85c7039ab0fd70a117d733"), name: 'Siona', manager: [ObjectId("4d85c7039ab0fd70a117d730"), ObjectId("4d85c7039ab0fd70a117d732")] })
 
-Of particular interest is that, for some documents, `manager` can be a scalar value, while for others it can be an array. Our original `find` query will work for both:
+Es de particular interes que, para algunos documentos, `manager` puede ser un valor escalar, mientras que para otros puede ser un arreglo. Nuestro query original `find` funcionara para ambos:
 
 	db.employees.find({manager: ObjectId("4d85c7039ab0fd70a117d730")})
 
@@ -339,24 +338,24 @@ Besides arrays, MongoDB also supports embedded documents. Go ahead and try inser
 
 	db.employees.insert({_id: ObjectId("4d85c7039ab0fd70a117d734"), name: 'Ghanima', family: {mother: 'Chani', father: 'Paul', brother: ObjectId("4d85c7039ab0fd70a117d730")}})
 
-In case you are wondering, embedded documents can be queried using a dot-notation:
+En el caso de que te pregunte, los documentos embebidos puedes ser accedidos usando la notacion de punto:
 
 	db.employees.find({'family.mother': 'Chani'})
 
-We'll briefly talk about where embedded documents fit and how you should use them.
+Hablaremos brebemente de donde se posicionan los documentos embebidos y como usarlos.
 
 #### DBRef ####
-MongoDB supports something known as `DBRef` which is a convention many drivers support. When a driver encounters a `DBRef` it can automatically pull the referenced document. A `DBRef` includes the collection and id of the referenced document. It generally serves a pretty specific purpose: when documents from the same collection might reference documents from a different collection from each other. That is, the `DBRef` for document1 might point to a document in `managers` whereas the `DBRef` for document2 might point to a document in `employees`.
+MongoDB soporta algo conocido como `DBRef` que es una convencion soportada por muchoas drivers. Cuando un driver encuentra un `DBRef` puede traer automaticamente el documento. Un `DBRef` incluye la coleccion y el id que refrencia al documento. Generalmete sirve para un proposito especifico: cuando documentos de la misma coleccion pueden refrenciar documentos de una coleccion diferente entre si. Esto es, el `DBRef` del documento1 puede aputar a un documento en `managers` y el `DBRef` del documento2 puede apuntar a un documrnto es `employees`. 
 
+#### Desnormalización ####
+Otra alternativa a el uso de joins es desnormalizar tus daots. Historicamente, la desnormalización estaba reservada para codigo sensible a rendimiento, o cualdo los datos debian ser guardados en instantaneas (como en un registro de auditoria). Sin embargo, con la popularidad creciente de NoSQL, que en la mayoria no tiene joins, la desnormalización como parte de un modelado normal se esta convirtiendo en lago muy comun. Esto no significa que debes duplicar cada pieza de informacion en cda documento. Son embargo, en vez de dejar que el miedo de datos duplicados maneje tus decisioes, considera modelar tus datos en base a que informacion pertenece a que documento.
 
-#### Denormalization ####
-Yet another alternative to using joins is to denormalize your data. Historically, denormalization was reserved for performance-sensitive code, or when data should be snapshotted (like in an audit log). However, with the ever-growing popularity of NoSQL, many of which don't have joins, denormalization as part of normal modeling is becoming increasingly common. This doesn't mean you should duplicate every piece of information in every document. However, rather than letting fear of duplicate data drive your design decisions, consider modeling your data based on what information belongs to what document.
+Por ejemplo, digamos que estas desarrollando una aplicacion de foro. La manera tradicional de asociar un `user` especifico a un `post` es via la columna `userid` en `posts`. Con ese modelo no puedes mostrar los `posts` sin traerte (con join) `users`. Una alternativa posible es simplemente guardar `name` y `userid` en cada `post`. Tambien podrias hacerlo con documentos embebidos, `user: {id: ObjectId('Something'), name: 'Leto'}`. Si, si dejas que tus usarios cambien su nombre, tendras que actualizar cada documento (lo que significa 1 query extra).
 
-For example, say you are writing a forum application. The traditional way to associate a specific `user` with a `post` is via a `userid` column within `posts`. With such a model, you can't display `posts` without retrieving (joining to) `users`. A possible alternative is simply to store the `name` as well as the `userid` with each `post`. You could even do so with an embedded document, like `user: {id: ObjectId('Something'), name: 'Leto'}`. Yes, if you let users change their name, you'll have to update each document (which is 1 extra query). 
+Ajustarse a esta forma de hacer las cosas no sera facil para algunos. La mayoria de la veces no tendra sentido hacer esto. No temas experimentar con este enfoque. No sólo es adecuado en algunas circunstancias, pero también puede ser la manera correcta de hacerlo.
 
-Adjusting to this kind of approach won't come easy to some. In a lot of cases it won't even make sense to do this. Don't be afraid to experiment with this approach though. It's not only suitable in some circumstances, but it can also be the right way to do it.
+#### Cual debes escoger? ####
 
-#### Which Should You Choose? ####
 Arrays of ids are always a useful strategy when dealing with one-to-many or many-to-many scenarios. It's probably safe to say that `DBRef` aren't use very often, though you can certainly experiment and play with them. That generally leaves new developers unsure about using embedded documents versus doing manual referencing.
 
 First, you should know that an individual document is currently limited to 4 megabytes in size. Knowing that documents have a size limit, though quite generous, gives you some idea of how they are intended to be used. At this point, it seems like most developers lean heavily on manual references for most of their relationships. Embedded documents are frequently leveraged, but mostly for small pieces of data which we want to always pull with the parent document. A real world example I've used is to store an `accounts` document with each user, something like:
@@ -365,15 +364,15 @@ First, you should know that an individual document is currently limited to 4 meg
 
 That doesn't mean you should underestimate the power of embedded documents or write them off as something of minor utility. Having your data model map directly to your objects makes things a lot simpler and often does remove the need to join. This is especially true when you consider that MongoDB lets you query and index fields of an embedded document. 
 
-### Few or Many Collections ###
-Given that collections don't enforce any schema, it's entirely possible to build a system using a single collection with a mismatch of documents.  From what I've seen, most MongoDB systems are laid out similarly to what you'd find in a relational system. In other words, if it would be a table in a relational database, it'll likely be a collection in MongoDB (many-to-many join tables being an important exception).
+### Pocas o Muchas Colecciones ###
+Dado que las colecciones no se rigen por un schema, es posible construir un sistema completo en una sola coleccion con documentos disparejos. Por lo que he visto, la mayoria de los sistemas MongoDB estan formados similarmente a lo que puedes encontrar en un sistema relacional. En otras palabras, si existe una tabla en una base de datos relacionales, podria haber una collection en MongoDB (tablas joins de muchos-a-muchos es una excepcion importante)
 
-The conversation gets even more interesting when you consider embedded documents. The example that frequently comes up is a blog. Should you have a `posts` collection and a `comments` collection, or should each `post` have an array of `comments` embedded within it. Setting aside the 4MB limit for the time being (all of Hamlet is less than 200KB, just how popular is your blog?), most developers still prefer to separate things out. It's simply cleaner and more explicit.
+La conversacion se vuelve mas interesante cuadno consideras embeber documentos. El ejemplo que se ve frecuentmente es un blog. Deberias tener una coleccion `posts` y unqa coleccion `comments`, o cada `post` deberia tener un arreglo de `comments` embebido en el. Dejando a un lado el limite de 4MB por el momento (todo el Hamlet es menos de 200KB, asi que que tan popular es tu blog), la mayoría de los desarrolladores prefieren separar las cosas. Es simplemente mas limpio y explicito.  
 
-There's no hard rule (well, aside from 4MB). Play with different approaches and you'll get a sense of what does and does not feel right. 
+No hay ninguna regla (excepto por los 4MB). Juega con las diferentes opciones y tendras una idea de lo que se siente bien o no.
 
-### In This Chapter ###
-Our goal in this chapter was to provide some helpful guidelines for modeling your data in MongoDB. A starting point if you will. Modeling in a document-oriented system is different, but not too different than a relational world. You have a bit more flexibility and one constraint, but for a new system, things tend to fit quite nicely. The only way you can go wrong is by not trying.
+### En Este Capitulo ###
+Nuestro objetivo en este capitulo fue proveer alguna ayuda para guiarte a modelar tus datos en MongoDB. Un punto de partida. El modelado en un sustema orientado a documentos es diferente, pero no tan diferente al mundo relacional. Tienes un poco mas de flexibilidad y una limitacion, pero para un nuevo sistema, las cosas tienden a tomar su lugar. La unica forma de algo vaya mal es no intentando.
 
 \clearpage
 
