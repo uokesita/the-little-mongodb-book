@@ -425,6 +425,10 @@ MongoDB se basa en MapReduce para la mayoría del trabajo de procesamiento de da
 
 Por supuesto, paralelización de procesamiento de datos no es algo en que las bases de datos relacionales sobresalgan. Hay planes para las futuras versiones de MongoDB para mejorar en el manejo de conjuntos muy grandes de datos.
 
+
+### Coordenadas Geoespaciales ###
+Una poderosa caracteristica de MongoDB es su soporte para indeces geoespaciales. Esto te permite almacenar coordenadas `x` y `y` en los documentos y luego encontrar documentos que esten cerca de un set de coordenadas o `$within` una caja o un circulo. Esta es una caracteristica que es explicada mejor via algun aditamiento visual, asi que te invito a probar el [tutorial interactivo de 5 minutos en coordenadas geoespaciales](http://mongly.com/geo/index) si quieres saber mas.
+
 ### Herramientas y Madurez ###
 Probablemente ya sabes la respuesta a esto, pero MongoDB es obviamente más joven que la mayoría de los sistemas de bases de datos relacionales. Esto es algo que absolutamente deberías considerar. Cuanto peso tiene depende de lo que estas haciendo y como lo estas haciendo. Sin embargo, honestamente no se puede ignorar el hecho de que MongoDB es más joven y las herramientas disponibles no son muy grandes (aunque las herramientas en torno a una gran cantidad de bases de datos relacionales maduras es bastante horrible también!). A modo de ejemplo, la falta de apoyo para la base-10 en números de punto flotante, obviamente, será una preocupación (aunque no necesariamente una traba) para los sistemas de manejo de dinero.
 
@@ -618,7 +622,7 @@ Un indice unico puede ser creado pasandole un segundo parametro y configurando `
 
 Los indices pueden ser creados en campos embebidos (de nuevo, usando la notación de punto) y en campos de arreglos. Tambien podemos crear indices compuestos:
 
-	db.unicorns.dropIndex({name: 1, vampires: -1});
+	db.unicorns.ensureIndex({name: 1, vampires: -1});
 
 El orden de los indices (1 para ascendiente, -1 para descendiente) no importa para un unico indice, pero puede tener un impacto por composición de indices cuando estas ordenando o usando condiciones de rango.
 
