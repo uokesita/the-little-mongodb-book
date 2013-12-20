@@ -63,7 +63,7 @@ Mientras lees este libro, te invito a que juegues con MongoDB para replicar lo q
 
 3. Crea un nuevo archivo de texto en la sub-carpeta `bin` llamado `mongodb.config`
 
-4. Añade una sola linea a tu mongod.config: `dbpath=RUTA_DONDE_QUIERES_GUARDAR_TUS_ARCHIVOS_DE_BASE_DE_DATOS`. Por ejemplo, en Windows podrías hacer `dbpath=c:\mongodb\data` y en Linux `dbpath=/etc/mongodb/data`.
+4. Añade una sola linea a tu mongodb.config: `dbpath=RUTA_DONDE_QUIERES_GUARDAR_TUS_ARCHIVOS_DE_BASE_DE_DATOS`. Por ejemplo, en Windows podrías hacer `dbpath=c:\mongodb\data` y en Linux `dbpath=/etc/mongodb/data`.
 
 5. Asegúrate que la ruta `dbpath` que especificaste exista.
 
